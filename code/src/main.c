@@ -1,116 +1,85 @@
+#include "esp_camera.h"
 
-// objects
-#include <string.h>
-#include <sys/unistd.h>
+#define CAM_PIN_PWDN -1  //power down is not used
+#define CAM_PIN_RESET -1 //software reset will be performed
+#define CAM_PIN_XCLK 21
+#define CAM_PIN_SIOD 26
+#define CAM_PIN_SIOC 27
 
-//functions
-#include <sys/stat.h> //for checking if file exist
-#include "esp_vfs_fat.h"
-#include "sdmmc_cmd.h"
-#include "driver/sdmmc_host.h"
+#define CAM_PIN_D7 35
+#define CAM_PIN_D6 34
+#define CAM_PIN_D5 39
+#define CAM_PIN_D4 36
+#define CAM_PIN_D3 19
+#define CAM_PIN_D2 18
+#define CAM_PIN_D1 5
+#define CAM_PIN_D0 4
+#define CAM_PIN_VSYNC 25
+#define CAM_PIN_HREF 23
+#define CAM_PIN_PCLK 22
 
-// static const char *TAG = "example";
+static camera_config_t camera_config = {
+    .pin_pwdn = CAM_PIN_PWDN,
+    .pin_reset = CAM_PIN_RESET,
+    .pin_xclk = CAM_PIN_XCLK,
+    .pin_sscb_sda = CAM_PIN_SIOD,
+    .pin_sscb_scl = CAM_PIN_SIOC,
 
-#define MOUNT_POINT "/sdcard"
+    .pin_d7 = CAM_PIN_D7,
+    .pin_d6 = CAM_PIN_D6,
+    .pin_d5 = CAM_PIN_D5,
+    .pin_d4 = CAM_PIN_D4,
+    .pin_d3 = CAM_PIN_D3,
+    .pin_d2 = CAM_PIN_D2,
+    .pin_d1 = CAM_PIN_D1,
+    .pin_d0 = CAM_PIN_D0,
+    .pin_vsync = CAM_PIN_VSYNC,
+    .pin_href = CAM_PIN_HREF,
+    .pin_pclk = CAM_PIN_PCLK,
+
+    .xclk_freq_hz = 20000000,
+    .ledc_timer = LEDC_TIMER_0,
+    .ledc_channel = LEDC_CHANNEL_0,
+
+    .pixel_format = PIXFORMAT_JPEG, //YUV422,GRAYSCALE,RGB565,JPEG
+    .frame_size = FRAMESIZE_UXGA,   //QQVGA-QXGA Do not use sizes above QVGA when not JPEG
+
+    .jpeg_quality = 12,                 //0-63 lower number means higher quality
+    .fb_count = 1,                      //if more than one, i2s runs in continuous mode. Use only with JPEG
+    .grab_mode = CAMERA_GRAB_WHEN_EMPTY //CAMERA_GRAB_LATEST. Sets when buffers should be filled
+};
+
+esp_err_t camera_init()
+{
+
+    //initialize the camera
+    esp_err_t err = esp_camera_init(&camera_config);
+    if (err != ESP_OK)
+    {
+        //Camera Init Failed
+        return err;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t camera_capture()
+{
+    //acquire a frame
+    camera_fb_t *fb = esp_camera_fb_get();
+    if (!fb)
+    {
+        //Camera Capture Failed
+        return ESP_FAIL;
+    }
+    //replace this with your own function
+    //process_image(fb->width, fb->height, fb->format, fb->buf, fb->len);
+
+    //return the frame buffer back to the driver for reuse
+    esp_camera_fb_return(fb);
+    return ESP_OK;
+}
 
 void app_main(void)
 {
-    esp_err_t ret;
-
-    // Options for mounting the filesystem.
-    // If format_if_mount_failed is set to true, SD card will be partitioned and
-    // formatted in case when mounting fails.
-    esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-        .format_if_mount_failed = false,
-        .max_files = 5, //Max number of open files
-        .allocation_unit_size = 16 * 1024};
-
-    sdmmc_card_t *card;                     //the object that will hold the card
-    const char mount_point[] = MOUNT_POINT; //name of card root pos
-
-    // Use settings defined above to initialize SD card and mount FAT filesystem.
-
-    sdmmc_host_t host = SDMMC_HOST_DEFAULT(); //the HW config data of the sd
-
-    // This initializes the slot without card detect (CD) and write protect (WP) signals.
-    // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
-    sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-    slot_config.width = 4;
-
-    // Enable internal pullups on enabled pins.
-    slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
-
-    //the main mounting function:
-    //mount the card on card with mount_point position
-    ret = esp_vfs_fat_sdmmc_mount(mount_point, &host, &slot_config, &mount_config, &card);
-
-    if (ret != ESP_OK) //checks for errors
-    {
-        if (ret == ESP_FAIL)
-        {
-            //Failed to mount filesystem
-        }
-        else
-        {
-            //Failed to initialize the card -> esp_err_to_name(ret)
-        }
-        return;
-    }
-    // ********************************************* //
-    // Use POSIX and C standard library functions to work with files:
-    // (normal C file usage)
-    // First create a file.
-    const char *file_hello = MOUNT_POINT "/hello.txt";
-
-    //Opening file
-    FILE *f = fopen(file_hello, "w");
-    if (f == NULL)
-    {
-        //Failed to open file for writing
-        return;
-    }
-    fprintf(f, "Hello %s!\n", card->cid.name);
-    fclose(f);
-    //File written
-
-    const char *file_foo = MOUNT_POINT "/foo.txt";
-
-    // Check if destination file exists before renaming
-    struct stat st;
-    if (stat(file_foo, &st) == 0)
-    {
-        // Delete it if it exists
-        unlink(file_foo);
-    }
-
-    // Rename original file
-    if (rename(file_hello, file_foo) != 0)
-    {
-        //Rename failed
-        return;
-    }
-
-    // Open renamed file for reading
-    f = fopen(file_foo, "r");
-    if (f == NULL)
-    {
-        //Failed to open file for reading
-        return;
-    }
-
-    // Read a line from file
-    char line[64];
-    fgets(line, sizeof(line), f);
-    fclose(f);
-
-    // Strip newline
-    char *pos = strchr(line, '\n');
-    if (pos)
-    {
-        *pos = '\0';
-    }
-
-    //******************************//
-    // All done, unmount partition and disable SDMMC peripheral
-    esp_vfs_fat_sdcard_unmount(mount_point, card);
 }
