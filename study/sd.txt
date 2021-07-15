@@ -1,0 +1,13 @@
+Hello,
+
+on AI-Cam start SD with
+CODE: SELECT ALL
+
+void initSDCard( void ) {
+
+//  if( !SD_MMC.begin() ) { // fast 4bit mode
+  if( !SD_MMC.begin( "/sdcard", true ) ) { // slow 1bit mode
+    DBG_OUTPUT_PORT.println( "SD card init failed" );
+    return;
+  }
+}
