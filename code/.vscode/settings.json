@@ -5,6 +5,10 @@
         "sdmmc_host.h": "c",
         "sdmmc_cmd.h": "c",
         "sdmmc_types.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "event_groups.h": "c",
+        "esp_event.h": "c",
+        "esp_log.h": "c",
+        "esp_wifi.h": "c"
     }
 }
