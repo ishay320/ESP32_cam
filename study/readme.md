@@ -166,19 +166,19 @@ void app_main(void) {
 > one point: the led and data1 is shared on pin4 so the led flashes
 
 # camera control:
-> esp32-camera-github-drivers -> https://github.com/espressif/esp32-camera
+> [esp32-camera-github-drivers](https://github.com/espressif/esp32-camera)
 
 This is a package that work with the camera.  
 First we need to clone the git and add it to the project or in platformIO so great option is:
-> It's probably easier to just skip the platformIO library registry version and link the git repo as a submodule. (i.e. using code outside the platformIO library management). In this example we will install this as a submodule inside the platform.io $project/lib folder: 
-```bash
-cd $project\lib
-git submodule add -b master https://github.com/espressif/esp32-camera.git
-```
+> It's probably easier to just skip the platformIO library registry version and link the git repo as a submodule. (i.e. using code outside the platformIO library management). In this example we will install this as a submodule inside the platform.io $project/lib folder:
+>> ```bash
+>>cd $project\lib
+>>git submodule add -b master https://github.com/espressif/esp32-camera.git
+>>```
 > Then in platformio.ini file
-```
-build_flags = -I../lib/esp32-camera
-   ```
+>> ```
+>> build_flags = -I../lib/esp32-camera
+>>    ```
 > After that #include "esp_camera.h" statement will be available.
 
 ## Usage:
@@ -267,7 +267,7 @@ esp_err_t camera_capture() {
 
 # WIFI connectivity:
 ## wifi examples:
-> todo: wifi power save mode
+> **TODO:** wifi power save mode
 
 ### AP scan:
 ```c
@@ -364,9 +364,10 @@ void app_main(void) {
 }
 
 ```
-### connect to wifi:
+## connect to wifi:
 > The ESP can make an AP (acces point), STA (stationary) or eve both.
-both but bad code(part of the code):
+
+### both but bad code(part of the code):
 ```c
 // initialize NVS (nvs_flash_init)
 //********* WIFI configurations ********
@@ -398,7 +399,7 @@ ESP_ERROR_CHECK(esp_wifi_start());   // starts the wifi AP and or STA
 ESP_ERROR_CHECK(esp_wifi_connect()); // connect to wifi (STA)
 
 ```
-### sta connection:
+## sta connection:
 ```c
 void app_main(void) { // initialize NVS (nvs_flash_init)
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -428,7 +429,8 @@ Free Real Time Operation System
 and it give the option to run more then one task, semaphore, interrupts and more.
 
 it runs on esp stm atmel and even arduino.
-freeRTOS doc  https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/freertos.html  
+
+> [freeRTOS doc](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/freertos.html)
 
 ## tasks example:
 ```c
@@ -486,7 +488,7 @@ void app_main() {
 ```
 
 # networking:
-> github of examples - https://github.com/espressif/esp-idf/tree/f45b60b28b26af81864631bb1fbdf980d79e3c53/examples/protocols
+> [github of examples](https://github.com/espressif/esp-idf/tree/f45b60b28b26af81864631bb1fbdf980d79e3c53/examples/protocols)
 
 The examples include:
 Http server and client, Sockets and more.
